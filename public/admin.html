@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Security Guard: Kick unauthorized users to the login page immediately
+        if (sessionStorage.getItem('isAdmin') !== 'true') {
+            alert('Access Denied! Please log in first.');
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librarian Admin Panel</title>
+    <style>
+        :root {
+            --primary: #512da8;
+            --primary-hover: #673ab7;
+            --dark: #212121;
+            --light: #f5f5f7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--light);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+
+        h2 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 5px rgba(103, 58, 183, 0.3);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+         <nav style="background: #333; padding: 12px 20px; border-radius: 6px; margin-bottom: 25px; display: flex; gap: 15px;">
+    <a href="admin.html" style="color: white; text-decoration: none; font-weight: bold; padding: 8px 12px; background-color: #4A90E2; border-radius: 4px;">
+        ➕ Add New Book
+    </a>
+    <a href="transactions.html" style="color: white; text-decoration: none; font-weight: bold; padding: 8px 12px; background-color: #2ecc71; border-radius: 4px;">
+        📋 View Approvals & Borrowings
+    </a>
+</nav>
+        <h1>Librarian Management Portal</h1>
+        <p>Direct Catalog Entry & Cataloging Utility</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+
+
+            <h2>Add New Book to Inventory</h2>
+            <form id="add-book-form" onsubmit="addNewBook(event)">
+                <div class="form-group">
+                    <label for="title">Book Title</label>
+                    <input type="text" id="title" required placeholder="e.g., Totems of the Kisii">
+                </div>
+                <div class="form-group">
+                    <label for="author">Author Name</label>
+                    <input type="text" id="author" required placeholder="e.g., Abel O'Keragori">
+                </div>
+                <div class="form-group">
+                    <label for="isbn">ISBN / Barcode</label>
+                    <input type="text" id="isbn" required placeholder="e.g., 9966-884-74-2">
+                </div>
+                <div class="form-group">
+                    <label for="shelf_loc">Shelf Location</label>
+                    <input type="text" id="shelf_loc" required placeholder="e.g., Shelf A-4, Block B">
+                </div>
+                <button type="submit">Register Book in Database</button>
+            </form>
+            <a href="index.html" class="back-link">← Go to Student Library Search Page</a>
+        </div>
+    </div>
+
+    <script>
+        async function addNewBook(event) {
+            event.preventDefault(); // Stop page from reloading automatically
+
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const isbn = document.getElementById('isbn').value;
+            const shelf_loc = document.getElementById('shelf_loc').value;
+
+            const response = await fetch('/add-book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, author, isbn, shelf_loc })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Success! The book was saved to the database and cataloged.');
+                document.getElementById('add-book-form').reset(); // Empty the inputs for next entry
+            } else {
+                alert('Error: ' + result.error);
+            }
+        }
+    </script>
+</body>
+</html>

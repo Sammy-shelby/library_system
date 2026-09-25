@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Librarian - Borrowing Approvals</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f6f9; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #4A90E2; color: white; }
+    </style>
+</head>
+<body>
+
+    <a href="admin.html">← Back to Dashboard</a>
+    <h2>📚 Student Borrowing & Return Approvals</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Student ID</th>
+                <th>Book Title</th>
+                <th>Borrow Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="transactionsTable">
+            <!-- Data lands here -->
+        </tbody>
+    </table>
+
+    <script>
+        if (sessionStorage.getItem('isAdmin') !== 'true') {
+            alert('Access Denied! Please log in first.');
+            window.location.href = 'login.html';
+        }
+
+       async function loadTransactions() {
+    try {
+        const response = await fetch('/admin/transactions');
+        const data = await response.json();
+        const tableBody = document.getElementById('transactionsTable');
+
+        if (!tableBody) return;
+        tableBody.innerHTML = '';
+
+        // Safety check: ensure 'data' is actually an Array before calling forEach
+        if (!Array.isArray(data) || data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No borrowing records found (or server database error).</td></tr>';
+            return;
+        }
+
+        data.forEach(row => {
+            const isReturned = Number(row.is_approved) === 1;
+            const borrowStr = row.borrow_date ? new Date(row.borrow_date).toLocaleDateString() : 'N/A';
+            const dueStr = row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A';
+
+            tableBody.innerHTML += `
+                <tr>
+                    <td>#${row.transaction_id}</td>
+                    <td><strong>${row.student_id}</strong></td>
+                    <td>${row.title}</td>
+                    <td>${borrowStr}</td>
+                    <td>${dueStr}</td>
+                    <td><input type="checkbox"> Picked</td>
+                    <td>
+                        <input type="checkbox" 
+                            ${isReturned ? 'checked disabled' : ''} 
+                            onchange="approveReturn(${row.transaction_id}, '${row.isbn}')">
+                        ${isReturned ? '<span style="color:green;font-weight:bold;"> Returned</span>' : '<span style="color:red;font-weight:bold;"> Pending</span>'}
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error loading transactions:", err);
+    }
+}
+
+        async function approveReturn(transactionId, isbn) {
+            if (!confirm("Confirm that the student has returned this book?")) return;
+
+            const response = await fetch('/admin/approve-return', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transactionId, isbn })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert("Book return approved!");
+                loadTransactions();
+            } else {
+                alert("Error approving return.");
+            }
+        }
+
+        loadTransactions();
+    </script>
+</body>
+</html>

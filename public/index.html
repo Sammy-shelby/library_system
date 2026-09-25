@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Library Hub</title>
+    <style>
+        :root {
+            --primary: #512da8; /* Deep Purple Theme */
+            --primary-hover: #673ab7;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --dark: #212121;
+            --light: #f5f5f7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--light);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 5px rgba(103, 58, 183, 0.3);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #1b5e20; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #b71c1c; }
+
+        .book-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .book-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-available { background: #e8f5e9; color: var(--success); }
+        .status-borrowed { background: #ffebee; color: var(--danger); }
+
+        .contact-info p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Campus Library Portal</h1>
+        <p>Search books, check shelf status, and reserve dynamically</p>
+    </header>
+
+    <div class="container">
+        <!-- Left Side: Main Search & Results -->
+        <div>
+            <div class="card">
+                <h2>Search Catalog</h2>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Type title, keyword, or author...">
+                    <button onclick="searchBooks()">Search</button>
+                </div>
+
+                <div id="results-box" style="display: none;">
+                    <h3>Search Results</h3>
+                    <div id="results-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Contact Details & Quick Info -->
+        <div>
+            <div class="card contact-info">
+                <h2>Library Contact</h2>
+                <p>📍 <strong>Location:</strong> Main Campus, Kenyatta Library Block </p>
+                <p>📧 <strong>Email:</strong> library@campus.ke</p>
+                <p>📞 <strong>Phone:</strong> +254 700 000000</p>
+                <p>⏰ <strong>Hours:</strong> Mon - Fri: 8:00 AM - 9:00 PM</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Campus Library System. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        async function searchBooks() {
+            const query = document.getElementById('search-input').value;
+            const resultsBox = document.getElementById('results-box');
+            const resultsList = document.getElementById('results-list');
+
+            const response = await fetch(`/search-books?q=${query}`);
+            const books = await response.json();
+
+            resultsList.innerHTML = '';
+            resultsBox.style.display = 'block';
+
+            if (books.length === 0) {
+                resultsList.innerHTML = '<p>No books found matching that title.</p>';
+                return;
+            }
+
+            books.forEach(book => {
+                const div = document.createElement('div');
+                div.className = 'book-item';
+                
+                const isAvail = book.status === 'Available';
+                const badgeClass = isAvail ? 'status-available' : 'status-borrowed';
+                
+                let buttonHTML = '';
+                if (isAvail) {
+                    buttonHTML = `<button onclick="borrowBook('${book.isbn}')" class="btn-success">Reserve / Borrow</button>`;
+                } else {
+                    buttonHTML = `<button onclick="returnBook('${book.isbn}')" class="btn-danger">Return Book</button>`;
+                }
+
+                div.innerHTML = `
+                    <div>
+                        <strong style="font-size: 18px;">${book.title}</strong><br>
+                        <span style="color: #666;">by ${book.author}</span><br>
+                        <small>ISBN: ${book.isbn}</small> | 
+                        <small>Shelf: <strong>${book.shelf_loc || 'General Shelves'}</strong></small>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="status-badge ${badgeClass}" style="margin-bottom: 10px; display: block;">${book.status}</span>
+                        ${buttonHTML}
+                    </div>
+                `;
+                resultsList.appendChild(div);
+            });
+        }
+
+      async function borrowBook(isbn) {
+    let studentId = "";
+    // Requires strictly 6 to 8 numeric numbers
+    const studentIdRegex = /^\d{6,8}$/; 
+
+    while (true) {
+        studentId = prompt("Please enter your valid Student ID");
+        
+        
+        if (studentId === null) {
+            alert("Reservation cancelled.");
+            return;
+        }
+
+        studentId = studentId.trim();
+
+        
+        if (studentIdRegex.test(studentId)) {
+            break; // Valid!
+        } else {
+            alert("Invalid Student ID! Please enter a valid 6-8 digit number without letters or symbols.");
+        }
+    }
+
+    
+    const response = await fetch('/borrow-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            isbn: isbn,
+            studentId: studentId 
+        })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        // Calculate due date (5 days from today)
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 5);
+        const formattedDueDate = dueDate.toLocaleDateString('en-US', { 
+            weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
+        });
+
+        alert(
+            `SUCCESS! Book reserved under Student ID: ${studentId}.\n\n` +
+            `📅 Return Due Date: ${formattedDueDate} (5 Days Allowed)\n` +
+            `⚠️ Notice: Failure to return within 5 days will incur an overdue fine of KES 50 per day.`
+        );
+        searchBooks();
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+       async function returnBook(isbn) {
+    const response = await fetch('/return-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isbn })
+    });
+
+    const result = await response.json();
+
+    if (result.pending) {
+        alert("⏳ Return Pending Approval: Please hand over the physical book to the librarian to complete your return.");
+    } else if (result.success) {
+        alert("Success! Book return completed.");
+        searchBooks();
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+    </script>
+</body>
+</html>
